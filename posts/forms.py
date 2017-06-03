@@ -43,6 +43,9 @@ class LoginForm(forms.Form):
     email = forms.CharField(required=True)
     password = forms.CharField(widget=forms.PasswordInput(), required=True)
 
+    def clean_email(self):
+        return self.cleaned_data['email'].lower()
+
 
 class CommentForm(forms.ModelForm):
 
