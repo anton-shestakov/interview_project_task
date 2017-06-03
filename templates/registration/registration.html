@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block head_title %}Registration at covfefe blog{% endblock %}
+{% block content %}
+    <div class="content-section">
+        <form method="POST" class="post-form">{% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="save btn btn-default">Submit</button>
+        </form>
+    </div>
+{% endblock %}

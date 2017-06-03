@@ -1,0 +1,9 @@
+Welcome to Covfefe Blog!
+Before you get started, please confirm your email address.
+{{ registration_link }}
+
+Verification code: {{ verification_code }}
+
+
+Thanks,
+Covfefe Blog

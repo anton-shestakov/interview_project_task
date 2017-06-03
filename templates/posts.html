@@ -1,0 +1,37 @@
+{%  for post in posts %}
+    <div class="post">
+        <div class="date">
+            {{ post.created_dt }} by {{ post.created_by.username }}
+        </div>
+        <h1><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h1>
+        <p>{{ post.body|linebreaksbr }}</p>
+
+        <div class="post-action">
+            <div class="post_full_like">
+                <a href="#" class="post_like _like_wrap" onclick="likePost({{ post.pk }}, this); return false;">
+                    <i class="{% if post.is_liked_ %} glyphicon glyphicon-heart {% else %} glyphicon glyphicon-heart-empty {% endif %}"></i>
+                    <span class="post_like_link _link">Like</span>
+                    <span class="post_like_count _count">{{ post.total_likes }}</span>
+                </a>
+                </div>
+        </div>
+    </div>
+{% empty %}
+    <ul>
+        <li>{{ empty_message }}</li>
+    </ul>
+{% endfor %}
+{% if is_paginated %}
+      <ul class="pagination">
+        {% if page_obj.has_previous %}
+          <li><a href="?page={{ page_obj.previous_page_number }}">Previous page</a></li>
+        {% else %}
+          <li class="disabled"><span>Previous page</span></li>
+        {% endif %}
+        {% if page_obj.has_next %}
+          <li><a href="?page={{ page_obj.next_page_number }}">Next page</a></li>
+        {% else %}
+          <li class="disabled"><span>Next page</span></li>
+        {% endif %}
+      </ul>
+{% endif %}

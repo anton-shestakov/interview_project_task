@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+  <meta charset="utf-8">
+  <title>Welcome to Covfefe Blog!</title>
+  <style type="text/css">
+   .div_background {
+        background-color: #cccccc;
+        background-repeat: repeat-y;
+        padding: 20px;
+        width: 1440px;
+        font-size: 10px;
+        font-color: white;
+
+   }
+   .confirm_button {
+        border-radius: 8px;
+        border-color: green;
+        background: #1fb57f;
+        width: 200px;
+        height: 32px;
+        color: white;
+        font-weight: bold
+   }
+   .logo{
+        margin: 20px
+   }
+  </style>
+ </head>
+ <body>
+    <div class="div_background">
+        <h3>Welcome to Covfefe Blog!</h3>
+        <p>Before you get started, please confirm your email address.</p>
+        <a href="{{ registration_link }}"><button class="confirm_button">Confirm Email</button></a>
+        <br/>
+        <p>Verification code: {{ verification_code }}</p>
+        Thanks,
+        <br/>
+        <i>Covfefe Blog</i>
+    </div>
+ </body>
+</html>
+
+

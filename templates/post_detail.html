@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block head_title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+    <div class="post">
+        <div class="date">
+            {{ post.created_dt }} by {{ post.created_by.username }}
+        </div>
+        <h1>{{ post.title }}</h1>
+        <p>{{ post.body|linebreaksbr }}</p>
+    </div>
+
+    <hr>
+        {% for comment in comments %}
+            <div class="comment">
+                <div class="date">{{ comment.created_dt }}</div>
+                <strong>{{ comment.created_by.username }}</strong>
+                <p>{{ comment.body|linebreaks }}</p>
+            </div>
+        {% empty %}
+            <p>Be first to comment on this! </p>
+        {% endfor %}
+        {% if comments.has_other_pages %}
+              <ul class="pagination">
+                {% if comments.has_previous %}
+                  <li><a href="?page={{ comments.previous_page_number }}">Previous page</a></li>
+                {% else %}
+                  <li class="disabled"><span>Previous page</span></li>
+                {% endif %}
+                {% if comments.has_next %}
+                  <li><a href="?page={{ comments.next_page_number }}">Next page</a></li>
+                {% else %}
+                  <li class="disabled"><span>Next page</span></li>
+                {% endif %}
+              </ul>
+        {% endif %}
+        <div>
+            <a class="btn btn-default" href="{{ post.get_comment_url }}">Add comment</a>
+        </div>
+{% endblock %}

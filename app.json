@@ -1,0 +1,7 @@
+{
+  "name": "Posts app",
+  "description": "Interview app. Please give me a job.",
+  "image": "heroku/python",
+  "keywords": ["python", "django" ],
+  "addons": [ "heroku-postgresql" ]
+}

@@ -1,0 +1,21 @@
+{%  extends "base.html" %}
+{%  load staticfiles %}
+
+{% block scripts %}
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="{% static 'js/likeScript.js' %}"></script>
+    <script>
+        window.CSRF_TOKEN = "{{ csrf_token }}";
+    </script>
+{% endblock %}
+
+{% block content %}
+    <div class="content-section">
+        <form id="search_form" action="{%  url 'post_list_search' %}" method="GET" class="post-form">
+            {{ form.as_table }}
+            <button type="submit" class="searchbutton">Search</button>
+        </form>
+
+        {% include 'posts.html' with empty_message="No posts yet." %}
+    </div>
+{% endblock %}
