@@ -28,6 +28,7 @@ class Post(models.Model):
     slug = models.SlugField(max_length=140, unique=True)
     body = models.TextField()
     likes = models.ManyToManyField(User, related_name='likes_set', blank=True)
+    post_image = models.ImageField(upload_to='images/', default='images/no-img.png')
     created_dt = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, related_name='+')
 

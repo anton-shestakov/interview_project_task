@@ -4,7 +4,7 @@ from posts.models import User
 
 def check_user_exists(email):
 
-    exists = User.objects.filter(email=email).exists()
+    exists = User.objects.filter(email=email.lower()).exists()
 
     if exists:
         raise ValidationError("User with this email already exists", code="user_exists")

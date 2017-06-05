@@ -15,6 +15,8 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib.auth.decorators import login_required
 from posts.views import RegistrationView, VerificationCompleteView, \
     LoginView, LogoutView, HomePageView, PostView, PostSearchView, CommentView, LikePostView

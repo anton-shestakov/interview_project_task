@@ -1,40 +1,95 @@
 {% extends 'base.html' %}
+{%  load staticfiles %}
 {% block head_title %}{{ post.title }}{% endblock %}
+{% block scripts %}
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="{% static 'js/likeScript.js' %}"></script>
+{% endblock %}
 
 {% block content %}
-    <div class="post">
-        <div class="date">
-            {{ post.created_dt }} by {{ post.created_by.username }}
-        </div>
-        <h1>{{ post.title }}</h1>
-        <p>{{ post.body|linebreaksbr }}</p>
-    </div>
 
-    <hr>
-        {% for comment in comments %}
-            <div class="comment">
-                <div class="date">{{ comment.created_dt }}</div>
-                <strong>{{ comment.created_by.username }}</strong>
-                <p>{{ comment.body|linebreaks }}</p>
+    <div class="row">
+         <div class="col-md-12">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div class="post">
+                        <h4><strong>{{ post.title }}</strong></h4>
+                        <div class="post-header well well-sm">
+                            <span class="post-author vcard">By {{ post.created_by.username }}</span>
+                            <span class="post-timestamp">at {{ post.created_dt }}</span>
+                            <span class="post-comment-link pull-right"><a class="comment-link" href="#comments" onclick="">{{ post.comments.count }} Comments</a></span>
+                        </div>
+                        <div>
+                            <span class="thumbnail" style="float:left; margin-right: 10px;"><img alt="post_image" border="0" src="{{ post.post_image.url }}" title="post_image"  class="img-responsive" width="300px" height="200px"></span>
+                            <p>{{ post.body|linebreaksbr }}</p>
+                        </div>
+                 </div>
+                <div class="col-md-12">
+                    <a href="#" class="" onclick="likePost({{ post.pk }}, this); return false;">
+                        <i class="{% if post.is_liked_ %} glyphicon glyphicon-heart {% else %} glyphicon glyphicon-heart-empty {% endif %}"></i>
+                        <span class="">Like</span>
+                        <span class="">{{ post.total_likes }}</span>
+                </a>
+                </div>
             </div>
-        {% empty %}
-            <p>Be first to comment on this! </p>
-        {% endfor %}
-        {% if comments.has_other_pages %}
-              <ul class="pagination">
-                {% if comments.has_previous %}
-                  <li><a href="?page={{ comments.previous_page_number }}">Previous page</a></li>
-                {% else %}
-                  <li class="disabled"><span>Previous page</span></li>
+         </div>
+    </div>
+    </div>
+    <hr>
+    <div class="comment-tabs">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="active"><a href="#comments" role="tab" data-toggle="tab"><h4 class="reviews text-capitalize">Comments</h4></a></li>
+            <li><a href="#add-comment" role="tab" data-toggle="tab"><h4 class="reviews text-capitalize">Add comment</h4></a></li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane active" id="comments">
+                {% for comment in comments %}
+                    <div class="row">
+                        <div class="col-md-6 col-sm-5">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <strong>{{ comment.created_by.username }}</strong>
+                                    <span class="text-muted">commented on {{ comment.created_dt }}</span>
+                                </div>
+                                <div class="panel-body">
+                                    {{ comment.body|linebreaks }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p>Be first to comment on this! </p>
+                {% endfor %}
+                {% if comments.has_other_pages %}
+                      <ul class="pagination">
+                        {% if comments.has_previous %}
+                          <li><a href="?page={{ comments.previous_page_number }}">Previous page</a></li>
+                        {% else %}
+                          <li class="disabled"><span>Previous page</span></li>
+                        {% endif %}
+                        {% if comments.has_next %}
+                          <li><a href="?page={{ comments.next_page_number }}">Next page</a></li>
+                        {% else %}
+                          <li class="disabled"><span>Next page</span></li>
+                        {% endif %}
+                      </ul>
                 {% endif %}
-                {% if comments.has_next %}
-                  <li><a href="?page={{ comments.next_page_number }}">Next page</a></li>
-                {% else %}
-                  <li class="disabled"><span>Next page</span></li>
-                {% endif %}
-              </ul>
-        {% endif %}
-        <div>
-            <a class="btn btn-default" href="{{ post.get_comment_url }}">Add comment</a>
+            </div>
+            <div class="tab-pane" id="add-comment">
+                <form method="post" class="form-horizontal" id="commentForm" role="form" action="{{ post.get_comment_url }}">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="body" class="col-sm-2 control-label">Comment</label>
+                        <div class="col-sm-10">
+                          <textarea class="form-control" name="body" id="body" rows="5"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-10">
+                            <input type="submit" class="btn btn-success" id="submitComment" value="Submit comment"/>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
 {% endblock %}

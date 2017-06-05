@@ -1,0 +1,23 @@
+.navbar-brand {
+    margin: 0;
+    padding: 0;
+    display: inline;
+}
+
+.navbar-brand img {
+    display: inline;
+    max-height: 100%;
+}
+
+.post {padding: 10px;color: rgb(102, 102, 102);overflow: hidden;line-height: 2em;margin-bottom: 10px;margin: 10px;}
+.post h2 { margin-top:5px; }
+post panel-body {padding: 0;}
+
+.tab-content {
+    padding: 50px 15px;
+    border: 1px solid #ddd;
+    border-top: 0;
+    border-bottom-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+}
+

@@ -2,7 +2,11 @@ from django import forms
 from posts.models import Comment
 from django.core.validators import validate_email
 from django.contrib.auth.password_validation import validate_password
+from django.core.urlresolvers import reverse_lazy
 from posts.validators import check_user_exists, check_username_exists
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field
+from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions, StrictButton
 
 
 class RegistrationForm(forms.Form):
@@ -14,6 +18,9 @@ class RegistrationForm(forms.Form):
     birthday = forms.DateField(required=False)
     country = forms.CharField(required=False)
     city = forms.CharField(required=False)
+
+    def clean_email(self):
+        return self.cleaned_data['email'].lower()
 
     def clean(self):
         cleaned_data = super().clean()
@@ -36,6 +43,21 @@ class PostSearchForm(forms.Form):
 
         if not any([cleaned_data[i] for i in cleaned_data]):
             self.add_error(None, 'Search criteria is not specified')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.helper = FormHelper()
+        self.helper.form_class = 'form-inline'
+        self.helper.field_template = 'bootstrap3/layout/inline_field.html'
+        self.helper.form_method = 'GET'
+        self.helper.form_action = reverse_lazy('post_list_search')
+        self.helper.layout = Layout(
+            'country',
+            'city',
+            'keyword',
+            Submit('search', 'Search', css_class="btn-default")
+        )
 
 
 class LoginForm(forms.Form):

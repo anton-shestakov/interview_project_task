@@ -1,6 +1,7 @@
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate, login, logout
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from django.db import transaction
 from django.shortcuts import render, get_object_or_404, redirect
@@ -14,54 +15,47 @@ from django.views.decorators.csrf import csrf_exempt
 from posts.models import User, Post, UserVerification, Comment
 from posts.forms import RegistrationForm, LoginForm, CommentForm, PostSearchForm
 from posts.utils import get_verification_code, send_verification_email
+from posts.validators import check_user_exists, check_username_exists
 
 
 class RegistrationView(View):
 
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            return redirect('home_page')
-        return super().dispatch(request, *args, **kwargs)
-
-    def get(self, request):
-
-        form = RegistrationForm()
-
-        return render(request, 'registration/registration.html', {'form': form})
-
     @transaction.atomic
     def post(self, request):
 
-        form = RegistrationForm(request.POST)
+        if request.is_ajax():
 
-        if form.is_valid():
-            # add inactive user
-            user = User.objects.create(
-                email=form.cleaned_data['email'],
-                password=make_password(form.cleaned_data['password']),
-                username=form.cleaned_data['username'],
-                birthday=form.cleaned_data['birthday'],
-                country=form.cleaned_data['country'],
-                city=form.cleaned_data['city'],
-                is_active=False
-            )
+            # initialize form for validation
+            form = RegistrationForm(request.POST)
 
-            # create verification entry
-            verification = UserVerification.objects.create(
-                user=user,
-                verification_code=get_verification_code(user.email)
-            )
+            if form.is_valid():
+                # add inactive user
+                user = User.objects.create(
+                    email=form.cleaned_data['email'],
+                    password=make_password(form.cleaned_data['password']),
+                    username=form.cleaned_data['username'],
+                    birthday=form.cleaned_data['birthday'],
+                    country=form.cleaned_data['country'],
+                    city=form.cleaned_data['city'],
+                    is_active=False
+                )
 
-            # send email with link and code
-            host = request.build_absolute_uri()
-            send_verification_email(host, verification.verification_code, user.email)
+                # create verification entry
+                verification = UserVerification.objects.create(
+                    user=user,
+                    verification_code=get_verification_code(user.email)
+                )
 
-            messages.info(request, f'Verification link has been sent to {user.email}. '
-                                   f'Please visit that link to activate your account.')
+                # send email with link and code
+                host = request.build_absolute_uri()
+                send_verification_email(host, verification.verification_code, user.email)
 
-            return redirect('home_page')
+                return JsonResponse({'type': 'success', 'msg': f'''Verification link has been sent to {user.email}.
+                                                               Please visit that link to activate your account.'''})
 
-        return render(request, 'registration/registration.html', {'form': form})
+            else:
+                # collect error messages and return as JsonResponse
+                return JsonResponse({'type': 'error', 'msg': dict([(k, [str(e) for e in v]) for k, v in form.errors.items()])})
 
 
 class VerificationCompleteView(View):
@@ -82,48 +76,30 @@ class VerificationCompleteView(View):
             # clean verification record
             verification_record.delete()
 
-            messages.info(request, "Your account is activated. You can now login using email and password.")
-            return redirect('login_page')
-
-        # if verification expired show error page prompting for new registration
-        return render(request, 'registration/verify_resend.html')
+            messages.info(request, "Your account has been activated. You can now login using email and password.")
+            return redirect('home_page')
+        else:
+            messages.error(request, "Verification record expired!")
+            return redirect('home_page')
 
 
 class LoginView(View):
 
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            return redirect('home_page')
-        return super().dispatch(request, *args, **kwargs)
-
-    def get(self, request):
-
-        form = LoginForm()
-
-        return render(request, 'login.html', {'form': form})
-
     def post(self, request):
 
-        form = LoginForm(request.POST)
-
-        if form.is_valid():
-
-            user = authenticate(email=form.cleaned_data['email'], password=form.cleaned_data['password'])
+        if request.is_ajax():
+            email = request.POST.get('email').lower()
+            password = request.POST.get('password')
+            user = authenticate(email=email, password=password)
 
             if user is not None:
                 login(request, user)
 
-                messages.info(request, "Hello, %s!" % (user.username, ))
+                messages.info(request, f'Hello, {request.user.username}!')
+
+                return JsonResponse({'type': 'success', 'msg': f'Hello, {request.user.username}!'})
             else:
-                messages.error(request, 'Incorrect username and/or password')
-                # show new login form
-                return redirect('login_page')
-
-        else:
-            # show invalidated login form
-            return render(request, 'login.html', {'form': form})
-
-        return redirect('home_page')
+                return JsonResponse({'type': 'error', 'msg': 'Invalid email and/or password'})
 
 
 class LogoutView(View):
@@ -143,6 +119,7 @@ class HomePageView(TemplateView):
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated():
+            # redirect to PostListView
             view = PostListView.as_view()
             return view(request, *args, **kwargs)
         return super(HomePageView, self).dispatch(request, *args, **kwargs)
@@ -152,11 +129,11 @@ class PostListView(ListView):
     model = Post
     template_name = 'post_list.html'
     context_object_name = 'posts'
-    paginate_by = 2
+    paginate_by = 10
     form_class = PostSearchForm
 
     def get_context_data(self, **kwargs):
-        context = super(PostListView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['form'] = self.form_class()
 
         liked_set = self.request.user.likes_set.all()
@@ -189,6 +166,16 @@ class PostSearchView(ListView):
                     queryset = queryset.filter(**d)
         return queryset
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        liked_set = self.request.user.likes_set.all()
+        for post in context['posts']:
+            if post in liked_set:
+                post.is_liked_ = True
+
+        return context
+
 
 class PostView(View):
 
@@ -209,17 +196,13 @@ class PostView(View):
         except EmptyPage:
             comments_page = paginator.page(paginator.num_pages)
 
+        post_.is_liked_ = post_.is_liked(request.user)
+
         return render(request, 'post_detail.html', {'post': post_,
                                                     'comments': comments_page})
 
 
 class CommentView(View):
-
-    def get(self, request, slug):
-
-        form = CommentForm()
-
-        return render(request, 'post_add_comment.html', {'form': form})
 
     def post(self, request, slug):
 

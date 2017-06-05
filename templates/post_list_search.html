@@ -3,16 +3,12 @@
 {% block scripts %}
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script src="{% static 'js/likeScript.js' %}"></script>
-    <script>
-        window.CSRF_TOKEN = "{{ csrf_token }}";
-    </script>
 {% endblock %}
 
 {% block head_title %}Search results{% endblock %}
 
 {% block content %}
-    <h1>Search results</h1>
-    <div class="content-section">
-        {% include 'posts.html' with empty_message="No posts found." %}
-    </div>
+    <h2>Search results</h2>
+    <p></p>
+    {% include 'posts.html' with empty_message="No posts found." %}
 {% endblock %}

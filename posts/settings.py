@@ -25,7 +25,7 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 SECRET_KEY = '2h0r!rwfzi-=xnx0_%vy=vt+#^nt#(co*)90+#s4=51ev4t6)n'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 
 # Application definition
@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'posts',
     'django.contrib.postgres',
+    'crispy_forms',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -160,6 +162,29 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = os.environ.get('POSTS_EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('POSTS_EMAIL_HOST_PASSWORD')
 
+CRISPY_TEMPLATE_PACK = 'bootstrap3'
+
+# storage settings
+AWS_HEADERS = {  # see http://developer.yahoo.com/performance/rules.html#expires
+    'Expires': 'Thu, 31 Dec 2099 20:00:00 GMT',
+    'Cache-Control': 'max-age=94608000',
+}
+
+
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = 'covfefe-blog'
+
+# Tell django-storages that when coming up with the URL for an item in S3 storage, keep
+# it simple - just use this domain plus the path. (If this isn't set, things get complicated).
+# This controls how the `static` template tag from `staticfiles` gets expanded, if you're using it.
+# We also use it in the next setting.
+AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+
+DEFAULT_FILE_STORAGE = 'posts.s3utils.MediaS3BotoStorage'
+MEDIAFILES_LOCATION = 'media'
+MEDIA_URL = "https://%s/%s/" % (AWS_S3_CUSTOM_DOMAIN, MEDIAFILES_LOCATION)
+
 
 LOGGING = {
     'version': 1,
@@ -189,3 +214,11 @@ LOGGING = {
         },
     }
 }
+
+
+try:
+    from posts.local_settings import *
+except ImportError:
+    pass
+
+

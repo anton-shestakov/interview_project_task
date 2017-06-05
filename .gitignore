@@ -4,3 +4,4 @@
 staticfiles/
 __pycache__/
 *.log
+local_settings.py
