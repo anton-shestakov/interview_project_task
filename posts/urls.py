@@ -18,11 +18,12 @@ from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import ensure_csrf_cookie
 from posts.views import RegistrationView, VerificationCompleteView, \
     LoginView, LogoutView, HomePageView, PostView, PostSearchView, CommentView, LikePostView
 
 urlpatterns = [
-    url(r'^$', HomePageView.as_view(), name='home_page'),
+    url(r'^$', ensure_csrf_cookie(HomePageView.as_view()), name='home_page'),
     url(r'^search/$', login_required(PostSearchView.as_view()), name='post_list_search'),
     url(r'^registration/$', RegistrationView.as_view(), name='registration_page'),
     url(r'^registration/([0-9a-f]{32})$', VerificationCompleteView.as_view(), name='verification_page'),
