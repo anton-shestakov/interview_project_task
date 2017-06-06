@@ -1,0 +1,27 @@
+    <div class="row">
+         <div class="col-md-12">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div class="post">
+                        <h4><strong><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></strong></h4>
+                        <div class="post-header well well-sm">
+                            <span class="post-author vcard">By {{ post.created_by.username }}</span>
+                            <span class="post-timestamp">at {{ post.created_dt }}</span>
+                            <span class="post-comment-link pull-right"><a class="comment-link" href="{{ post.get_absolute_url }}#comments" onclick="">{{ post.comments.count }} Comments</a></span>
+                        </div>
+                        <div>
+                            <span class="thumbnail" style="float:left; margin-right: 10px;"><img alt="post_image" border="0" src="{{ post.post_image.url }}" title="post_image"  class="img-responsive" width="300px" height="200px"></span>
+                            <p>{% autoescape off %}{{ post.body}}{% endautoescape %}</p>
+                        </div>
+                 </div>
+                <div class="col-md-12">
+                    <a href="#" class="" onclick="likePost({{ post.pk }}, this); return false;">
+                        <i class="{% if post.is_liked_ %} glyphicon glyphicon-heart {% else %} glyphicon glyphicon-heart-empty {% endif %}"></i>
+                        <span class="">Like</span>
+                        <span class="">{{ post.total_likes }}</span>
+                </a>
+                </div>
+            </div>
+         </div>
+    </div>
+    </div>
