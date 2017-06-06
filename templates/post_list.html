@@ -3,10 +3,19 @@
 {%  load crispy_forms_tags %}
 
 {% block content %}
-    {% crispy form %}
-    <p></p>
-    {% include 'posts.html' with empty_message="No posts yet." %}
-
+    <div class="container">
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
+                        <span class="text-muted">{{ message }}</span></li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% crispy form %}
+        <p></p>
+        {% include 'posts.html' with empty_message="No posts yet." %}
+    </div>
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script src="{% static 'js/likeScript.js' %}"></script>
 {% endblock %}

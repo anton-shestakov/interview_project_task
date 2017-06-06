@@ -8,7 +8,9 @@
 {% block head_title %}Search results{% endblock %}
 
 {% block content %}
-    <h2>Search results</h2>
-    <p></p>
-    {% include 'posts.html' with empty_message="No posts found." %}
+    <div class="container">
+        <h2>Search results</h2>
+        <p></p>
+        {% include 'posts.html' with empty_message="No posts found." %}
+    </div>
 {% endblock %}
