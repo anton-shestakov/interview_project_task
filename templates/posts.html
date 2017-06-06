@@ -12,7 +12,7 @@
                         </div>
                         <div>
                             <span class="thumbnail" style="float:left; margin-right: 10px;"><img alt="post_image" border="0" src="{{ post.post_image.url }}" title="post_image"  class="img-responsive" width="300px" height="200px"></span>
-                            <p>{{ post.body|linebreaksbr }}</p>
+                            <p>{{ post.body|linebreaksbr|safe}}</p>
                         </div>
                  </div>
                 <div class="col-md-12">
