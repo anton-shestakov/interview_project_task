@@ -44,6 +44,7 @@ $("#signupform").submit(function(e) {
 
     var form_data = $(this).serialize();
     var alert_elem = $("#signup-alert");
+    var error_elem = $('#signup-critical')
 
     //This is the Ajax post.Observe carefully. It is nothing but details of where_to_post,what_to_post
     //Send data
@@ -64,8 +65,8 @@ $("#signupform").submit(function(e) {
              $success_elem.text(json.msg);
              $form.hide();
          }
-         else {
-             // show error message above form
+         else if (json.type == "error-validation") {
+            // show error message above form
 
              alert_elem.text('');
              alert_elem.show();
@@ -79,6 +80,20 @@ $("#signupform").submit(function(e) {
                 }
             }
          }
+         else if (json.type == "error-email") {
+             // hide registration form
+             $form.hide();
+             alert_elem.hide();
+
+             // show error message above form
+             error_elem.show();
+             error_elem.text(json.msg);
+
+             // log full msg to console
+             console.log(json["msg-error"]);
+         }
+
+
      },
      error : function(xhr,errmsg,err) {
          console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console

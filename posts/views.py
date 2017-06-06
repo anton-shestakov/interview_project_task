@@ -1,7 +1,7 @@
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate, login, logout
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.core.exceptions import ValidationError
+from django.conf import settings
 from django.http import JsonResponse
 from django.db import transaction
 from django.shortcuts import render, get_object_or_404, redirect
@@ -12,15 +12,13 @@ from django.contrib import messages
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from posts.models import User, Post, UserVerification, Comment
-from posts.forms import RegistrationForm, LoginForm, CommentForm, PostSearchForm
+from posts.models import User, Post, UserVerification
+from posts.forms import RegistrationForm, CommentForm, PostSearchForm
 from posts.utils import get_verification_code, send_verification_email
-from posts.validators import check_user_exists, check_username_exists
 
 
 class RegistrationView(View):
 
-    @transaction.atomic
     def post(self, request):
 
         if request.is_ajax():
@@ -29,33 +27,41 @@ class RegistrationView(View):
             form = RegistrationForm(request.POST)
 
             if form.is_valid():
-                # add inactive user
-                user = User.objects.create(
-                    email=form.cleaned_data['email'],
-                    password=make_password(form.cleaned_data['password']),
-                    username=form.cleaned_data['username'],
-                    birthday=form.cleaned_data['birthday'],
-                    country=form.cleaned_data['country'],
-                    city=form.cleaned_data['city'],
-                    is_active=False
-                )
+                try:
+                    with transaction.atomic():
+                        # add inactive user
+                        user = User.objects.create(
+                            email=form.cleaned_data['email'],
+                            password=make_password(form.cleaned_data['password']),
+                            username=form.cleaned_data['username'],
+                            birthday=form.cleaned_data['birthday'],
+                            country=form.cleaned_data['country'],
+                            city=form.cleaned_data['city'],
+                            is_active=False
+                        )
 
-                # create verification entry
-                verification = UserVerification.objects.create(
-                    user=user,
-                    verification_code=get_verification_code(user.email)
-                )
+                        # create verification entry
+                        verification = UserVerification.objects.create(
+                            user=user,
+                            verification_code=get_verification_code(user.email)
+                        )
 
-                # send email with link and code
-                host = request.build_absolute_uri()
-                send_verification_email(host, verification.verification_code, user.email)
+                        # send email with link and code
+                        host = request.build_absolute_uri()
+                        send_verification_email(host, verification.verification_code, user.email)
 
-                return JsonResponse({'type': 'success', 'msg': f'''Verification link has been sent to {user.email}.
-                                                               Please visit that link to activate your account.'''})
+                        return JsonResponse({'type': 'success', 'msg': f'''Verification link has been sent to {user.email}.
+                                                                       Please visit that link to activate your account.'''})
+
+                except Exception as e:
+                    return JsonResponse({'type': 'error-email', 'msg': f'''Error during registration.
+                                                                        Please contact administrator at
+                                                                        {settings.EMAIL_SUPPORT_ADDRESS}''',
+                                         'msg-error': str(e)})
 
             else:
                 # collect error messages and return as JsonResponse
-                return JsonResponse({'type': 'error', 'msg': dict([(k, [str(e) for e in v]) for k, v in form.errors.items()])})
+                return JsonResponse({'type': 'error-validation', 'msg': dict([(k, [str(e) for e in v]) for k, v in form.errors.items()])})
 
 
 class VerificationCompleteView(View):
