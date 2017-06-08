@@ -27,38 +27,36 @@ class RegistrationView(View):
             form = RegistrationForm(request.POST)
 
             if form.is_valid():
-                try:
-                    with transaction.atomic():
-                        # add inactive user
-                        user = User.objects.create(
-                            email=form.cleaned_data['email'],
-                            password=make_password(form.cleaned_data['password']),
-                            username=form.cleaned_data['username'],
-                            birthday=form.cleaned_data['birthday'],
-                            country=form.cleaned_data['country'],
-                            city=form.cleaned_data['city'],
-                            is_active=False
-                        )
+                with transaction.atomic():
+                    # add inactive user
+                    user = User.objects.create(
+                        email=form.cleaned_data['email'],
+                        password=make_password(form.cleaned_data['password']),
+                        username=form.cleaned_data['username'],
+                        birthday=form.cleaned_data['birthday'],
+                        country=form.cleaned_data['country'],
+                        city=form.cleaned_data['city'],
+                        is_active=False
+                    )
 
-                        # create verification entry
-                        verification = UserVerification.objects.create(
-                            user=user,
-                            verification_code=get_verification_code(user.email)
-                        )
+                    # create verification entry
+                    verification = UserVerification.objects.create(
+                        user=user,
+                        verification_code=get_verification_code(user.email)
+                    )
 
-                        # send email with link and code
-                        host = request.build_absolute_uri()
+                    # send email with link and code
+                    host = request.build_absolute_uri()
+                    try:
                         send_verification_email(host, verification.verification_code, user.email)
+                        msg = f'''Verification link has been sent to {user.email}.
+                                Please visit that link to activate your account.'''
+                    except Exception as e:
+                        msg = f'''We are experiencing problems with outgoing email. Verification link will be sent soon to {user.email}.
+                                Please visit that link to activate your account.'''
+                        pass
 
-                        return JsonResponse({'type': 'success', 'msg': f'''Verification link has been sent to {user.email}.
-                                                                       Please visit that link to activate your account.'''})
-
-                except Exception as e:
-                    return JsonResponse({'type': 'error-email', 'msg': f'''Error during registration.
-                                                                        Please contact administrator at
-                                                                        {settings.EMAIL_SUPPORT_ADDRESS}''',
-                                         'msg-error': str(e)})
-
+                    return JsonResponse({'type': 'success', 'msg': msg})
             else:
                 # collect error messages and return as JsonResponse
                 return JsonResponse({'type': 'error-validation', 'msg': dict([(k, [str(e) for e in v]) for k, v in form.errors.items()])})

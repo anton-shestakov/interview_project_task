@@ -69,3 +69,6 @@ class UserVerification(models.Model):
     user = models.ForeignKey(User)
     verification_code = models.CharField(max_length=50, default=uuid.uuid4)
     expires_at = models.DateTimeField(default=get_expire_date)
+
+    def __str__(self):
+        return str(self.user)
